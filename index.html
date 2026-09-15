@@ -240,6 +240,53 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   .mgr-text{padding:15px; font-size:13.5px; line-height:1.9; white-space:pre-wrap; color:var(--ink); direction:rtl; text-align:right}
 
   footer.note{margin-top:32px; color:var(--muted); font-size:12px; text-align:center; line-height:1.9}
+
+  /* ===== tabs & analytics ===== */
+  .tabbar{display:inline-flex; gap:4px; background:#fff; border:1px solid var(--line2); border-radius:14px;
+    padding:5px; margin-top:26px; box-shadow:var(--sh-sm)}
+  .tabbar.hidden{display:none}
+  .tab{border:0; background:transparent; color:var(--muted); font-family:var(--f-head); font-weight:800;
+    font-size:13.5px; padding:9px 18px; border-radius:10px; cursor:pointer; transition:.15s}
+  .tab.on{background:linear-gradient(135deg,var(--cocoa2),var(--cocoa)); color:#f4c65a}
+  .view.hidden{display:none}
+  #analytics{margin-top:8px}
+  .an-head{display:flex; align-items:baseline; gap:12px; flex-wrap:wrap; margin:16px 0 6px}
+  .an-head h2{font-size:20px; font-weight:800; margin:0; color:var(--ink)}
+  .an-head p{margin:0; color:var(--muted); font-size:13px}
+  .kpis{display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin:16px 0 8px}
+  @media(max-width:900px){.kpis{grid-template-columns:repeat(2,1fr)}}
+  .kpi{background:#fff; border:1px solid var(--line); border-radius:16px; padding:16px 16px 14px; box-shadow:var(--sh-sm);
+    position:relative; overflow:hidden}
+  .kpi::before{content:""; position:absolute; inset:0 auto 0 0; width:4px; background:var(--kc,var(--gold))}
+  .kpi .kl{font-size:12px; color:var(--muted); font-weight:600; display:flex; align-items:center; gap:6px}
+  .kpi .kv{font-family:var(--f-head); font-weight:800; font-size:22px; color:var(--ink); margin-top:6px; font-variant-numeric:tabular-nums}
+  .kpi .ks{font-size:11.5px; color:var(--muted); margin-top:2px}
+  .charts{display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:16px}
+  @media(max-width:900px){.charts{grid-template-columns:1fr}}
+  .panel{background:#fff; border:1px solid var(--line); border-radius:16px; padding:16px; box-shadow:var(--sh-sm)}
+  .panel.span2{grid-column:1 / -1}
+  .panel h4{margin:0 0 12px; font-size:14px; font-weight:800; color:var(--ink); font-family:var(--f-head);
+    display:flex; align-items:center; gap:8px}
+  .panel h4::before{content:""; width:9px; height:9px; border-radius:3px; background:var(--gold)}
+  .chart svg{display:block; width:100%; height:auto; overflow:visible}
+  .chart svg text{font-family:var(--f-body)}
+  .legend{display:flex; flex-wrap:wrap; gap:10px 16px; margin-top:12px}
+  .legend .li{display:flex; align-items:center; gap:7px; font-size:12px; color:var(--ink)}
+  .legend .sw{width:12px; height:12px; border-radius:4px; flex:0 0 auto}
+  .legend .lv{color:var(--muted); font-variant-numeric:tabular-nums}
+  /* matrix heatmap */
+  .mtx-wrap{overflow:auto; border-radius:12px; border:1px solid var(--line)}
+  table.mtx{border-collapse:collapse; width:100%; font-family:var(--f-body); font-size:12px; direction:rtl}
+  table.mtx th,table.mtx td{padding:8px 10px; text-align:center; white-space:nowrap; border:1px solid #f0e7da}
+  table.mtx thead th{background:var(--cocoa2); color:#f0dcb8; font-family:var(--f-head); font-weight:700; position:sticky; top:0}
+  table.mtx td.rh{text-align:right; font-family:var(--f-head); font-weight:700; color:var(--ink); background:#faf3e9; position:sticky; inset-inline-start:0}
+  table.mtx td.num{font-variant-numeric:tabular-nums; font-weight:600}
+  table.mtx tfoot td{background:#f1e6d3; font-family:var(--f-head); font-weight:800}
+  .insights{display:grid; gap:10px}
+  .insight{display:flex; gap:11px; align-items:flex-start; background:#fff; border:1px solid var(--line);
+    border-inline-start:4px solid var(--gold); border-radius:12px; padding:12px 14px; font-size:13.5px; color:var(--ink); box-shadow:var(--sh-sm)}
+  .insight .ii{font-size:16px; line-height:1.4}
+  .insight b{font-weight:800}
 </style>
 </head>
 <body>
@@ -334,6 +381,12 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 
   <div class="msg" id="msg"></div>
 
+  <div class="tabbar hidden" id="tabbar">
+    <button class="tab" data-tab="report" data-i18n="tab_report"></button>
+    <button class="tab" data-tab="analytics" data-i18n="tab_analytics"></button>
+  </div>
+
+  <div class="view" id="reportView">
   <div class="result hidden" id="result">
     <div class="rbar"><h2 data-i18n="result_title"></h2><div class="chips" id="chips"></div></div>
     <div class="tablewrap"><table class="report" id="tbl"></table></div>
@@ -354,6 +407,9 @@ https://github.com/nodeca/pako/blob/main/LICENSE
       <div id="depBody"></div>
     </div>
   </div>
+  </div><!-- /reportView -->
+
+  <div class="view hidden" id="analytics"></div>
 
   <footer class="note" data-i18n="footer_note"></footer>
 </div>
@@ -406,7 +462,25 @@ const T={
   err_cols_missing:"ناقص عمود من: الموقع / التصنيف / صافي السعر (ع.م) / الطرف-الاسم.",
   err_no_farea:"شيت الفروع لازم يحتوي على صف رأس فيه عمود «الفرع».",
   err_no_deposit_col:"شيت نقاط البيع لازم يحتوي على عمود «العربون».",
-  footer_note:"الأرقام 0.00 والفاضي 0.00 · مفيش عمود بيتمسح · الألوان بتتغير كل مرة · رد العربون والعربون في شيتات منفصلة داخل ملف الإكسيل."
+  footer_note:"الأرقام 0.00 والفاضي 0.00 · مفيش عمود بيتمسح · الألوان بتتغير كل مرة · رد العربون والعربون في شيتات منفصلة داخل ملف الإكسيل.",
+  tab_report:"📄 التقرير", tab_analytics:"📊 التحليلات",
+  an_title:"لوحة التحليلات", an_sub:"نظرة سريعة على الأداء عبر الفروع والتطبيقات",
+  kpi_apps_total:"إجمالي التطبيقات", kpi_lab:"لابوشيه", kpi_lev:"ليفانا", kpi_branches:"عدد الفروع",
+  kpi_collection:"إجمالي التحصيل", kpi_onaccount:"على الحساب", kpi_deposits:"العرابين", kpi_insurance:"التأمين",
+  kpi_avg_branch:"متوسط الفرع", kpi_top_branch:"أعلى فرع", kpi_lev_share:"نسبة ليفانا",
+  ch_by_branch:"المبيعات (تطبيقات) حسب الفرع", ch_lab_lev:"لابوشيه مقابل ليفانا حسب الفرع",
+  ch_share:"توزيع لابوشيه / ليفانا", ch_by_app:"المبيعات حسب التطبيق", ch_pay:"طرق التحصيل",
+  ch_onacc:"على الحساب حسب الفرع", ch_matrix:"مصفوفة (فرع × تطبيق)",
+  pay_cash:"نقدي", pay_card:"بطاقات", pay_account:"على الحساب",
+  an_insights:"أهم الملاحظات", an_none:"شغّل المعالجة الأول عشان تظهر التحليلات.",
+  matrix_total:"الإجمالي", riyal:"ريال",
+  ins_top:"أعلى فرع في مبيعات التطبيقات: {b} بـ {v} ريال ({p}٪ من الإجمالي).",
+  ins_lev:"ليفانا تمثّل {p}٪ من إجمالي التطبيقات ({v} ريال).",
+  ins_app:"أكتر تطبيق مساهمة: {a} بـ {v} ريال ({p}٪).",
+  ins_zero:"عدد الفروع من غير مبيعات تطبيقات: {n}.",
+  ins_onacc:"إجمالي «على الحساب»: {v} ريال ({p}٪ من التحصيل) — أعلى فرع: {b}.",
+  ins_dep:"إجمالي العرابين: {v} ريال، ومسترد العربون: {r} ريال.",
+  ins_refund:"⚠️ في {n} عملية رد عربون بإجمالي {v} ريال — راجع تبويب التقرير."
  },
  en:{
   title_tag:"LaBouchee — Branch Sales Automation",
@@ -452,7 +526,25 @@ const T={
   err_cols_missing:"Missing a column: location / category / net price (customer) / party-name.",
   err_no_farea:"The branch sheet must have a header row containing a “branch” column.",
   err_no_deposit_col:"The POS sheet must contain a “deposit” column.",
-  footer_note:"Numbers as 0.00, blanks as 0.00 · no column is deleted · colors change each run · deposit refund & deposit go to separate sheets in the Excel file."
+  footer_note:"Numbers as 0.00, blanks as 0.00 · no column is deleted · colors change each run · deposit refund & deposit go to separate sheets in the Excel file.",
+  tab_report:"📄 Report", tab_analytics:"📊 Analytics",
+  an_title:"Analytics dashboard", an_sub:"A quick look at performance across branches and apps",
+  kpi_apps_total:"Apps total", kpi_lab:"LaBouchee", kpi_lev:"Levana", kpi_branches:"Branches",
+  kpi_collection:"Total collection", kpi_onaccount:"On account", kpi_deposits:"Deposits", kpi_insurance:"Insurance",
+  kpi_avg_branch:"Avg / branch", kpi_top_branch:"Top branch", kpi_lev_share:"Levana share",
+  ch_by_branch:"App sales by branch", ch_lab_lev:"LaBouchee vs Levana by branch",
+  ch_share:"LaBouchee / Levana split", ch_by_app:"Sales by app", ch_pay:"Payment methods",
+  ch_onacc:"On-account by branch", ch_matrix:"Matrix (branch × app)",
+  pay_cash:"Cash", pay_card:"Cards", pay_account:"On account",
+  an_insights:"Key insights", an_none:"Run the process first to see analytics.",
+  matrix_total:"Total", riyal:"SAR",
+  ins_top:"Top branch by app sales: {b} with {v} SAR ({p}% of total).",
+  ins_lev:"Levana is {p}% of the apps total ({v} SAR).",
+  ins_app:"Biggest app: {a} with {v} SAR ({p}%).",
+  ins_zero:"Branches with no app sales: {n}.",
+  ins_onacc:"Total on-account: {v} SAR ({p}% of collection) — top branch: {b}.",
+  ins_dep:"Total deposits: {v} SAR, refunded deposits: {r} SAR.",
+  ins_refund:"⚠️ {n} deposit-refund(s) totaling {v} SAR — check the Report tab."
  }
 };
 function t(k){ return (T[LANG]&&T[LANG][k])||T.ar[k]||k; }
@@ -569,6 +661,9 @@ function buildPivot(aoa, appKeywords){
   }
   const isApp = p => kws.some(k=>kwHit(p,k));
   const map=new Map();            // normLoc -> {disp,lab,lev}
+  const byApp=new Map();          // appLabel -> total
+  const byBranchApp=new Map();    // normLoc -> Map(appLabel -> total)
+  const cleanApp=p=>String(p||"").replace(/^تطبيق\s*/,"").replace(/^شركة\s*/,"").trim()||"—";
   let skippedWholesale=0, keptRows=0, appRows=0;
 
   for(let i=hi+1;i<aoa.length;i++){
@@ -585,8 +680,13 @@ function buildPivot(aoa, appKeywords){
     if(!map.has(nLoc)) map.set(nLoc,{disp:String(locRaw).trim(),lab:0,lev:0});
     const o=map.get(nLoc);
     if(isLev) o.lev+=val; else o.lab+=val;
+    // تجميعات إضافية للتحليلات (لا تؤثر على الأرقام)
+    const app=cleanApp(row[cParty]);
+    byApp.set(app,(byApp.get(app)||0)+val);
+    let bm=byBranchApp.get(nLoc); if(!bm){bm=new Map(); byBranchApp.set(nLoc,bm);}
+    bm.set(app,(bm.get(app)||0)+val);
   }
-  return {map,meta:{skippedWholesale,keptRows,appRows,branches:map.size}};
+  return {map,byApp,byBranchApp,meta:{skippedWholesale,keptRows,appRows,branches:map.size}};
 }
 
 /* ============================================================
@@ -940,6 +1040,159 @@ function renderDeposits(ref, dep, depErr){
 }
 
 /* ============================================================
+   التحليلات (Dashboard) — رسومات SVG يدوية (أوفلاين)
+   ============================================================ */
+function switchTab(name){
+  document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("on", b.dataset.tab===name));
+  document.getElementById("reportView").classList.toggle("hidden", name!=="report");
+  document.getElementById("analytics").classList.toggle("hidden", name!=="analytics");
+}
+function esc(s){return String(s==null?"":s).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));}
+function clip(s,n){s=String(s==null?"":s);return s.length>n?s.slice(0,n-1)+"…":s;}
+function catColors(n){
+  const P=STATE&&STATE.palette, base=P?P.base:210;
+  const out=[]; const step=n<=1?0:300/n;
+  for(let i=0;i<n;i++) out.push(`hsl(${(((base+i*step)%360)+360)%360} 58% 53%)`);
+  return out;
+}
+function svgBarsH(items,color){
+  const W=700,labelW=135,barMax=W-labelW-80,rowH=25,gap=9;
+  const max=Math.max(1,...items.map(d=>Math.abs(d.value)));
+  const H=Math.max(40,items.length*(rowH+gap)+4);
+  let s=`<svg viewBox="0 0 ${W} ${H}">`;
+  items.forEach((d,i)=>{const y=i*(rowH+gap)+2,cy=y+rowH/2+4,bw=Math.max(2,Math.abs(d.value)/max*barMax),col=d.color||color||"#C99A3B";
+    s+=`<text x="0" y="${cy}" font-size="12" font-weight="700" fill="#3a2f28">${esc(clip(d.label,15))}</text>`;
+    s+=`<rect x="${labelW}" y="${y}" width="${bw}" height="${rowH}" rx="6" fill="${col}"/>`;
+    s+=`<text x="${labelW+bw+7}" y="${cy}" font-size="11.5" font-weight="700" fill="#6b5c4f">${fmt(d.value)}</text>`;});
+  return s+"</svg>";
+}
+function svgStacked(items,colors){
+  const W=700,labelW=135,barMax=W-labelW-80,rowH=23,gap=9;
+  const max=Math.max(1,...items.map(d=>d.segs.reduce((a,b)=>a+b,0)));
+  const H=Math.max(40,items.length*(rowH+gap)+4);
+  let s=`<svg viewBox="0 0 ${W} ${H}">`;
+  items.forEach((d,i)=>{const y=i*(rowH+gap)+2,cy=y+rowH/2+4;let x=labelW;const tot=d.segs.reduce((a,b)=>a+b,0);
+    s+=`<text x="0" y="${cy}" font-size="12" font-weight="700" fill="#3a2f28">${esc(clip(d.label,15))}</text>`;
+    d.segs.forEach((v,k)=>{const bw=v/max*barMax;if(bw>0.5){s+=`<rect x="${x}" y="${y}" width="${bw}" height="${rowH}" fill="${colors[k]}" ${k===0?'rx="6"':''}/>`;}x+=bw;});
+    s+=`<text x="${x+7}" y="${cy}" font-size="11.5" font-weight="700" fill="#6b5c4f">${fmt(tot)}</text>`;});
+  return s+"</svg>";
+}
+function arcPath(cx,cy,r,rin,a0,a1,color){
+  const p=(rad,a)=>[cx+rad*Math.cos(a),cy+rad*Math.sin(a)];
+  const large=(a1-a0)>Math.PI?1:0;
+  const [x0,y0]=p(r,a0),[x1,y1]=p(r,a1),[x2,y2]=p(rin,a1),[x3,y3]=p(rin,a0);
+  return `<path d="M${x0} ${y0} A${r} ${r} 0 ${large} 1 ${x1} ${y1} L${x2} ${y2} A${rin} ${rin} 0 ${large} 0 ${x3} ${y3} Z" fill="${color}"/>`;
+}
+function svgDonut(items){
+  const total=items.reduce((a,d)=>a+Math.max(0,d.value),0)||1;
+  const cx=95,cy=95,r=78,rin=48; let a0=-Math.PI/2;
+  let s=`<svg viewBox="0 0 190 190" style="max-width:210px;margin:auto">`;
+  items.forEach(d=>{let frac=Math.max(0,d.value)/total; if(frac<=0)return;
+    if(frac>0.9999){const m=a0+Math.PI; s+=arcPath(cx,cy,r,rin,a0,m,d.color)+arcPath(cx,cy,r,rin,m,a0+2*Math.PI,d.color); a0+=2*Math.PI; return;}
+    const a1=a0+frac*2*Math.PI; s+=arcPath(cx,cy,r,rin,a0,a1,d.color); a0=a1;});
+  s+=`<text x="95" y="92" text-anchor="middle" font-size="15" font-weight="800" fill="#3a2f28">${fmt(total)}</text>`;
+  s+=`<text x="95" y="108" text-anchor="middle" font-size="10" fill="#8b7f73">${esc(t("matrix_total"))}</text>`;
+  return s+"</svg>";
+}
+function legend(items){
+  return `<div class="legend">`+items.map(d=>`<div class="li"><span class="sw" style="background:${d.color}"></span>${esc(d.label)} <span class="lv">${fmt(d.value)}</span></div>`).join("")+`</div>`;
+}
+function heatmap(branches,apps,mtx){
+  const flat=mtx.flat(); const max=Math.max(1,...flat); const accH=STATE&&STATE.palette?STATE.palette.acc:40;
+  let h=`<div class="mtx-wrap"><table class="mtx"><thead><tr><th>${esc(t("th_branch"))}</th>`;
+  apps.forEach(a=>h+=`<th>${esc(a)}</th>`); h+=`<th>${esc(t("matrix_total"))}</th></tr></thead><tbody>`;
+  branches.forEach((b,i)=>{h+=`<tr><td class="rh">${esc(b)}</td>`; let rt=0;
+    apps.forEach((a,j)=>{const v=mtx[i][j]||0; rt+=v; const al=v<=0?0:0.14+0.72*(v/max);
+      const bg=v<=0?"#ffffff":`hsl(${((accH%360)+360)%360} 68% ${Math.round(93-al*44)}%)`;
+      const tc=al>0.55?"#fff":"#3a2f28";
+      h+=`<td class="num" style="background:${bg};color:${tc}">${v?fmt(v):"—"}</td>`;});
+    h+=`<td class="num" style="font-weight:800">${fmt(rt)}</td></tr>`;});
+  h+=`</tbody><tfoot><tr><td class="rh">${esc(t("matrix_total"))}</td>`;
+  apps.forEach((a,j)=>{let ct=0;branches.forEach((b,i)=>ct+=mtx[i][j]||0);h+=`<td class="num">${fmt(ct)}</td>`;});
+  h+=`<td class="num">${fmt(flat.reduce((a,b)=>a+b,0))}</td></tr></tfoot></table></div>`;
+  return h;
+}
+function kpi(kc,label,value,sub){
+  return `<div class="kpi" style="--kc:${kc}"><div class="kl">${label}</div><div class="kv">${value}</div>${sub?`<div class="ks">${sub}</div>`:""}</div>`;
+}
+function buildAnalytics(){
+  const el=document.getElementById("analytics"); if(!el) return;
+  if(!STATE||!STATE.assembled){ el.innerHTML=`<div class="panel">${t("an_none")}</div>`; return; }
+  const A=STATE.assembled, cols=A.columns, rows=A.dataRows, P=STATE.palette;
+  const sum=a=>a.reduce((x,y)=>x+y,0);
+  const totApps=sum(rows.map(r=>r.tot)), totLab=sum(rows.map(r=>r.lab)), totLev=sum(rows.map(r=>r.lev));
+  const has=n=>cols.some(c=>c===n||(norm(c).includes("اجمالي")&&norm(c).includes("التطبيق")&&n==="اجمالي التطبيقات"));
+  const colSum=n=> cols.some(c=>c===n)? sum(rows.map(r=>cellValue(r,n,cols))) : null;
+  const onAcc=colSum("على الحساب"), collect=colSum("إجمالي التحصيل"), cash=colSum("التحصيل النقدي"), card=colSum("تحصيل بطاقات");
+  const deposits = STATE.deposits? STATE.deposits.tDep : colSum("العرابين");
+  const insurance= STATE.deposits? STATE.deposits.tIns : colSum("التأمين");
+  const pv=STATE.pivot;
+  const byApp = pv? [...pv.byApp.entries()].map(([k,v])=>({label:k,value:v})).filter(d=>Math.abs(d.value)>0).sort((a,b)=>b.value-a.value):[];
+  const appNames=byApp.map(a=>a.label);
+  const mtx = pv? rows.map(r=>{const bm=pv.byBranchApp.get(norm(r.branch)); return appNames.map(a=> bm?(bm.get(a)||0):0);}) : [];
+  const RY=" "+t("riyal");
+
+  // ---- KPIs ----
+  let kp=`<div class="kpis">`;
+  kp+=kpi("var(--violet)", t("kpi_apps_total"), fmt(totApps)+RY, t("kpi_branches")+": "+rows.length);
+  kp+=kpi("var(--gold)", t("kpi_lab"), fmt(totLab)+RY, totApps?Math.round(totLab/totApps*100)+"%":"");
+  kp+=kpi("var(--teal)", t("kpi_lev"), fmt(totLev)+RY, totApps?Math.round(totLev/totApps*100)+"%":"");
+  if(collect!=null) kp+=kpi("var(--green)", t("kpi_collection"), fmt(collect)+RY, "");
+  else kp+=kpi("var(--rose)", t("kpi_top_branch"), rows.length? clip(rows.slice().sort((a,b)=>b.tot-a.tot)[0].branch,14):"—", rows.length?fmt(rows.slice().sort((a,b)=>b.tot-a.tot)[0].tot)+RY:"");
+  if(onAcc!=null) kp+=kpi("var(--blue)", t("kpi_onaccount"), fmt(onAcc)+RY, collect?Math.round(onAcc/collect*100)+"% "+t("kpi_collection"):"");
+  if(deposits!=null) kp+=kpi("var(--amber)", t("kpi_deposits"), fmt(deposits)+RY, "");
+  if(insurance!=null) kp+=kpi("var(--pist)", t("kpi_insurance"), fmt(insurance)+RY, "");
+  kp+=kpi("var(--cocoa2)", t("kpi_avg_branch"), fmt(rows.length?totApps/rows.length:0)+RY, "");
+  kp+=`</div>`;
+
+  // ---- charts ----
+  const branchesSorted=rows.slice().sort((a,b)=>b.tot-a.tot);
+  const barItems=branchesSorted.map(r=>({label:r.branch,value:r.tot,color:"var(--violet)"}))
+      .map(d=>({label:d.label,value:d.value,color:`hsl(${P?P.base:210} 55% 52%)`}));
+  const stackItems=branchesSorted.map(r=>({label:r.branch,segs:[r.lab,r.lev]}));
+  const shareItems=[{label:t("kpi_lab"),value:totLab,color:`hsl(${P?P.base:40} 60% 50%)`},{label:t("kpi_lev"),value:totLev,color:`hsl(${P?P.acc:180} 55% 48%)`}];
+  const appColors=catColors(byApp.length);
+  const appItems=byApp.map((d,i)=>({label:d.label,value:d.value,color:appColors[i]}));
+
+  let ch=`<div class="charts">`;
+  ch+=`<div class="panel"><h4>${esc(t("ch_by_branch"))}</h4><div class="chart">${svgBarsH(barItems)}</div></div>`;
+  ch+=`<div class="panel"><h4>${esc(t("ch_lab_lev"))}</h4><div class="chart">${svgStacked(stackItems,[shareItems[0].color,shareItems[1].color])}</div>${legend(shareItems)}</div>`;
+  ch+=`<div class="panel"><h4>${esc(t("ch_share"))}</h4><div class="chart">${svgDonut(shareItems)}</div>${legend(shareItems)}</div>`;
+  if(byApp.length) ch+=`<div class="panel"><h4>${esc(t("ch_by_app"))}</h4><div class="chart">${svgBarsH(appItems)}</div></div>`;
+  // payment methods
+  if(cash!=null||card!=null||onAcc!=null){
+    const pay=[{label:t("pay_cash"),value:cash||0,color:`hsl(${P?P.base:150} 55% 48%)`},
+               {label:t("pay_card"),value:card||0,color:`hsl(${(P?P.base:150)+40} 55% 52%)`},
+               {label:t("pay_account"),value:onAcc||0,color:`hsl(${P?P.acc:40} 60% 52%)`}].filter(d=>d.value>0);
+    if(pay.length) ch+=`<div class="panel"><h4>${esc(t("ch_pay"))}</h4><div class="chart">${svgDonut(pay)}</div>${legend(pay)}</div>`;
+  }
+  if(onAcc!=null){
+    const accItems=rows.filter(r=>cellValue(r,"على الحساب",cols)>0).map(r=>({label:r.branch,value:cellValue(r,"على الحساب",cols),color:`hsl(${P?P.base:210} 45% 55%)`})).sort((a,b)=>b.value-a.value);
+    if(accItems.length) ch+=`<div class="panel"><h4>${esc(t("ch_onacc"))}</h4><div class="chart">${svgBarsH(accItems)}</div></div>`;
+  }
+  ch+=`</div>`;
+
+  // ---- matrix ----
+  let mx="";
+  if(appNames.length){ mx=`<div class="panel span2" style="margin-top:16px"><h4>${esc(t("ch_matrix"))}</h4>${heatmap(rows.map(r=>r.branch),appNames,mtx)}</div>`; }
+
+  // ---- insights ----
+  const ins=[];
+  if(branchesSorted.length){const top=branchesSorted[0];ins.push(["🏆",t("ins_top").replace("{b}",top.branch).replace("{v}",fmt(top.tot)).replace("{p}",totApps?Math.round(top.tot/totApps*100):0)]);}
+  ins.push(["🍫",t("ins_lev").replace("{p}",totApps?Math.round(totLev/totApps*100):0).replace("{v}",fmt(totLev))]);
+  if(byApp.length){const a=byApp[0];ins.push(["📱",t("ins_app").replace("{a}",a.label).replace("{v}",fmt(a.value)).replace("{p}",totApps?Math.round(a.value/totApps*100):0)]);}
+  const zero=rows.filter(r=>r.tot===0).length; if(zero) ins.push(["🔍",t("ins_zero").replace("{n}",zero)]);
+  if(onAcc!=null&&collect){const topAcc=rows.slice().sort((a,b)=>cellValue(b,"على الحساب",cols)-cellValue(a,"على الحساب",cols))[0];
+    ins.push(["🧾",t("ins_onacc").replace("{v}",fmt(onAcc)).replace("{p}",Math.round(onAcc/collect*100)).replace("{b}",topAcc?topAcc.branch:"—")]);}
+  if(deposits!=null) ins.push(["💰",t("ins_dep").replace("{v}",fmt(deposits)).replace("{r}",fmt(STATE.deposits?STATE.deposits.tDepR:0))]);
+  if(STATE.refunds&&STATE.refunds.rows.length) ins.push(["⚠️",t("ins_refund").replace("{n}",STATE.refunds.rows.length).replace("{v}",fmt(Math.abs(STATE.refunds.total)))]);
+  const insHtml=`<div class="panel span2" style="margin-top:16px"><h4>${esc(t("an_insights"))}</h4><div class="insights">`+
+    ins.map(x=>`<div class="insight"><span class="ii">${x[0]}</span><div>${x[1]}</div></div>`).join("")+`</div></div>`;
+
+  el.innerHTML=`<div class="an-head"><h2>${esc(t("an_title"))}</h2><p>${esc(t("an_sub"))}</p></div>`+kp+ch+mx+insHtml;
+}
+
+/* ============================================================
    تصدير Excel منسّق (ExcelJS)
    ============================================================ */
 async function exportXlsx(){
@@ -1159,7 +1412,11 @@ document.getElementById("run").addEventListener("click",async()=>{
     // ملخص
     const nB=assembled.dataRows.length;
     STATE.summary={nB, appRows:pivot.meta.appRows, skipped:pivot.meta.skippedWholesale, merged:!!report, refunds, deposits};
+    STATE.pivot=pivot;
     renderSummary();
+    buildAnalytics();
+    document.getElementById("tabbar").classList.remove("hidden");
+    switchTab("report");
   }catch(err){
     console.error(err);
     setMsg("err","❌ "+ (err.message||"حصل خطأ أثناء المعالجة."));
@@ -1169,7 +1426,7 @@ document.getElementById("run").addEventListener("click",async()=>{
 });
 
 document.getElementById("recolor").addEventListener("click",()=>{
-  if(!STATE)return; STATE.palette=makePalette(); render();
+  if(!STATE)return; STATE.palette=makePalette(); render(); buildAnalytics();
 });
 document.getElementById("download").addEventListener("click",async()=>{
   const b=document.getElementById("download"); b.disabled=true; b.textContent=t("download_working");
@@ -1213,10 +1470,11 @@ function applyLang(){
   const rc=document.getElementById("recolor"); if(rc) rc.textContent=t("btn_recolor");
   const dp=document.getElementById("datePill");
   if(dp) dp.textContent=(STATE&&STATE.assembled)? t("date_prefix")+(STATE.assembled.dateStr||todayStr()) : t("date_auto");
-  if(STATE){ renderDeposits(STATE.refunds, STATE.deposits, STATE.depErr); renderSummary(); }
+  if(STATE){ renderDeposits(STATE.refunds, STATE.deposits, STATE.depErr); renderSummary(); buildAnalytics(); }
 }
 function setLang(l){ LANG=l; applyLang(); }
 document.querySelectorAll(".lt").forEach(b=>b.addEventListener("click",()=>setLang(b.dataset.lang)));
+document.querySelectorAll(".tab").forEach(b=>b.addEventListener("click",()=>switchTab(b.dataset.tab)));
 applyLang();
 </script>
 </body>
